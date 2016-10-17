@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+
+    <!-- 下拉刷新 -->
+    <color name="swipe_color_1">#2e2e2e</color>
+    <color name="swipe_color_2">#2e2e2e</color>
+    <color name="swipe_color_3">#2e2e2e</color>
+    <color name="swipe_color_4">#2e2e2e</color>
+</resources>
