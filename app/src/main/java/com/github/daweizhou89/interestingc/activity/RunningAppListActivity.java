@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Toast;
@@ -33,8 +34,7 @@ public class RunningAppListActivity extends BaseActivity implements View.OnClick
         @Override
         public void onReceive(Context context, Intent intent) {
             if (Constant.ACTION_FORCE_STOP_FINISHED.equals(intent.getAction())) {
-                mActivityBinding.requestingText.setVisibility(View.INVISIBLE);
-                mActivityBinding.finishedText.setVisibility(View.VISIBLE);
+                changeState("清理完成");
             }
         }
     };
@@ -44,15 +44,13 @@ public class RunningAppListActivity extends BaseActivity implements View.OnClick
         super.onCreate(savedInstanceState);
         mActivityBinding = DataBindingUtil.setContentView(this, R.layout.activity_running_app_list);
         initView();
-
         IntentFilter intentFilter = new IntentFilter(Constant.ACTION_FORCE_STOP_FINISHED);
         registerReceiver(mBroadcastReceiver, intentFilter);
     }
 
     private void initView() {
         initRecycleView();
-        mActivityBinding.loadingText.setOnClickListener(this);
-        mActivityBinding.clickToClean.setOnClickListener(this);
+        mActivityBinding.stateText.setOnClickListener(this);
         mActivityBinding.cleanOk.setOnClickListener(this);
     }
 
@@ -70,7 +68,6 @@ public class RunningAppListActivity extends BaseActivity implements View.OnClick
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         mActivityBinding.appList.setLayoutManager(linearLayoutManager);
-        mActivityBinding.appList.setItemAnimator(new DefaultItemAnimator());
     }
 
     @Override
@@ -84,35 +81,44 @@ public class RunningAppListActivity extends BaseActivity implements View.OnClick
 
     private void tryLoadTasks() {
         if (AppUtil.isRunningService(this, getPackageName())) {
-            mActivityBinding.clickToClean.setVisibility(View.INVISIBLE);
-            mActivityBinding.loadingText.setVisibility(View.VISIBLE);
+            changeState("加载中...");
+            mActivityBinding.stateText.setOnClickListener(null);
             new MyAsyncTask().execute();
         } else {
             IntentUtil.startAccessibilitySettings(this);
         }
     }
 
+
+
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.loadingText:
-            case R.id.clickToClean:
+            case R.id.state_text:
                 tryLoadTasks();
                 break;
             case R.id.clean_ok:
                 String[] packages = mAppListAdapter.getSelectedPackages();
                 if (packages != null) {
                     mActivityBinding.appListContainer.setVisibility(View.INVISIBLE);
-                    mActivityBinding.requestingText.setVisibility(View.VISIBLE);
-                    Intent intent = new Intent(Constant.ACTION_FORCE_STOP_REQUEST);
-                    intent.putExtra(Constant.EXTRA_PACKAGE_NAMES, packages);
-                    sendBroadcast(intent);
+                    changeState("清理中");
+                    IntentUtil.sendForceStopBroadcast(this, packages);
                 } else {
                     Toast.makeText(this, "勾选清理项...", Toast.LENGTH_SHORT).show();
                 }
                 break;
             default:
                 break;
+        }
+    }
+
+    private void changeState(String state) {
+        if (TextUtils.isEmpty(state)) {
+            mActivityBinding.stateText.setVisibility(View.GONE);
+        } else {
+            mActivityBinding.stateText.setVisibility(View.VISIBLE);
+            mActivityBinding.stateText.setOnClickListener(this);
+            mActivityBinding.stateText.setText(state);
         }
     }
 
@@ -140,7 +146,7 @@ public class RunningAppListActivity extends BaseActivity implements View.OnClick
         protected void onPostExecute(List<AppUtil.RunningAppInfo> result) {
 
             if (result == null || result.isEmpty()) {
-                Toast.makeText(getApplicationContext(), "没有后台程序可清理...", Toast.LENGTH_SHORT).show();
+                changeState("无后台程序可清理...");
                 return;
             }
 
@@ -148,7 +154,6 @@ public class RunningAppListActivity extends BaseActivity implements View.OnClick
             mAppListAdapter.selectAll();
             mActivityBinding.appList.setAdapter(mAppListAdapter);
             mActivityBinding.appListContainer.setVisibility(View.VISIBLE);
-            mActivityBinding.loadingText.setVisibility(View.INVISIBLE);
             mActivityBinding.swipeRefreshLayout.setRefreshing(false);
         }
     }

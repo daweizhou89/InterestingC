@@ -20,5 +20,11 @@ public class IntentUtil {
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		context.startActivity(intent); 
 	}
-	
+
+	public static void sendForceStopBroadcast(Context context, String[] packages) {
+		Intent intent = new Intent(Constant.ACTION_FORCE_STOP_REQUEST);
+		intent.putExtra(Constant.EXTRA_PACKAGE_NAMES, packages);
+		context.sendBroadcast(intent);
+	}
+
 }

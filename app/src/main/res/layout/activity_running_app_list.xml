@@ -38,32 +38,11 @@
 
         </LinearLayout>
 
-        <TextView android:id="@+id/clickToClean"
+        <TextView android:id="@+id/state_text"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
             android:text="点击开始清理。。。" />
-
-        <TextView android:id="@+id/loadingText"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="加载中。。。"
-            android:visibility="invisible"/>
-
-        <TextView android:id="@+id/requestingText"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="清理中。。。"
-            android:visibility="invisible"/>
-
-        <TextView android:id="@+id/finishedText"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="清理完成。。。"
-            android:visibility="invisible"/>
 
     </RelativeLayout>
 </layout>

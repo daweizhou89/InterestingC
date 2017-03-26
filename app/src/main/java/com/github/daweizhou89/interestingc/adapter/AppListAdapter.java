@@ -20,19 +20,14 @@ import java.util.List;
 import com.github.daweizhou89.interestingc.R;
 
 /**
- * ****  *   *   ***  *  *
- * *     *   *  *     * *
- * ****  *   *  *     **
- * *     *   *  *     * *
- * *      ***    ***  *  *
- * <p/>
+ *
  * Created by zhoudawei on 16/8/2.
  */
-public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.AppInfoItemVH> implements View.OnClickListener {
+public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.AppInfoItemVH> {
 
     private List<AppUtil.RunningAppInfo> mRunningAppInfos;
 
-    private HashSet<Integer> mSelectedApp = new HashSet<>();
+    private HashSet<String> mSelectedApp = new HashSet<>();
 
     private LayoutInflater mLayoutInflater;
 
@@ -50,8 +45,8 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.AppInfoI
         if (selectedCount > 0) {
             packages = new String[selectedCount];
             int i = 0;
-            for (Integer index : mSelectedApp) {
-                packages[i] = mRunningAppInfos.get(index).packageName;
+            for (String packageName : mSelectedApp) {
+                packages[i] = packageName;
                 ++i;
             }
         }
@@ -59,48 +54,24 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.AppInfoI
     }
 
     public void selectAll() {
+        if (mRunningAppInfos == null) {
+            return;
+        }
         mSelectedApp.clear();
-        for (int i = 0; i < getItemCount(); i++) {
-            mSelectedApp.add(i);
+        for (AppUtil.RunningAppInfo appInfo : mRunningAppInfos) {
+            mSelectedApp.add(appInfo.packageName);
         }
-    }
-
-    @Override
-    public void onClick(View v) {
-        final int position = (Integer) v.getTag(R.id.tag_position);
-        if (mSelectedApp.contains(position)) {
-            mSelectedApp.remove(position);
-        } else {
-            mSelectedApp.add(position);
-        }
-        notifyItemChanged(position);
     }
 
     @Override
     public AppInfoItemVH onCreateViewHolder(ViewGroup parent, int viewType) {
         AppInfoItemBinding binding = DataBindingUtil.inflate(mLayoutInflater, R.layout.app_info_item, parent, false);
-        binding.getRoot().setOnClickListener(this);
         return new AppInfoItemVH(binding);
     }
 
     @Override
     public void onBindViewHolder(AppInfoItemVH holder, int position) {
-        final String packageName = mRunningAppInfos.get(position).packageName;
-        ApplicationInfo applicationInfo = null;
-        try {
-            applicationInfo = mPackageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
-        } catch (PackageManager.NameNotFoundException e) {
-            LogUtil.e(e);
-        }
-        if (applicationInfo != null) {
-            holder.binding.appIcon.setImageDrawable(applicationInfo.loadIcon(mPackageManager));
-            holder.binding.appName.setText(applicationInfo.loadLabel(mPackageManager));
-        } else {
-            holder.binding.appIcon.setImageDrawable(null);
-            holder.binding.appName.setText(null);
-        }
-        holder.binding.appSelected.setChecked(mSelectedApp.contains(position));
-        holder.binding.getRoot().setTag(R.id.tag_position, position);
+        holder.bindView(position);
     }
 
     @Override
@@ -111,13 +82,45 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.AppInfoI
         return mRunningAppInfos.size();
     }
 
-    public static class AppInfoItemVH extends RecyclerView.ViewHolder {
+    public class AppInfoItemVH extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         AppInfoItemBinding binding;
 
         public AppInfoItemVH(AppInfoItemBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
+            binding.getRoot().setOnClickListener(this);
+        }
+
+        public void bindView(int position) {
+            final String packageName = mRunningAppInfos.get(position).packageName;
+            ApplicationInfo applicationInfo = null;
+            try {
+                applicationInfo = mPackageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
+            } catch (PackageManager.NameNotFoundException e) {
+                LogUtil.e(e);
+            }
+            if (applicationInfo != null) {
+                binding.appIcon.setImageDrawable(applicationInfo.loadIcon(mPackageManager));
+                binding.appName.setText(applicationInfo.loadLabel(mPackageManager));
+            } else {
+                binding.appIcon.setImageDrawable(null);
+                binding.appName.setText(null);
+            }
+            binding.appSelected.setChecked(mSelectedApp.contains(packageName));
+            binding.getRoot().setTag(R.id.tag_position, position);
+        }
+
+        @Override
+        public void onClick(View v) {
+            final int position = (Integer) v.getTag(R.id.tag_position);
+            AppUtil.RunningAppInfo appInfo = mRunningAppInfos.get(position);
+            if (mSelectedApp.contains(appInfo.packageName)) {
+                mSelectedApp.remove(appInfo.packageName);
+            } else {
+                mSelectedApp.add(appInfo.packageName);
+            }
+            notifyItemChanged(position);
         }
 
     }
